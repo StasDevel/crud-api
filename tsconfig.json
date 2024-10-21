@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "alwaysStrict": true,
+    "target": "es2023",
+    "module": "commonjs",
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  }
+}
