@@ -91,6 +91,16 @@ exports.correctUser = (req: IncomingMessage, res: ServerResponse) => {
   const uniqueId: string = req.url.split("/")[3];
   const user: User = usersData.find((elem) => elem.id === uniqueId);
 
+  if (!uniqueId || !uuidValidate(uniqueId)) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        error: "Invalid request: userId is invalid",
+      })
+    );
+    return;
+  }
+
   let requestBody = "";
   req.on("data", (chunk) => {
     requestBody += chunk.toString();
@@ -100,20 +110,41 @@ exports.correctUser = (req: IncomingMessage, res: ServerResponse) => {
     const { username, age, hobbies }: User = JSON.parse(requestBody);
     const indexOfUser = usersData.indexOf(user);
 
+    if (indexOfUser === -1) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "User doesn't exist" }));
+    }
     if (typeof username === "string" || username) {
       usersData[indexOfUser].username = username;
     }
 
-    if (typeof age !== "number" || age) {
+    if (typeof age === "number" || age) {
       usersData[indexOfUser].age = age;
     }
 
-    if (typeof hobbies !== "object" || hobbies) {
+    if (typeof hobbies === "object" || hobbies) {
       usersData[indexOfUser].hobbies = Array.from(
         new Set([...usersData[indexOfUser].hobbies, ...hobbies])
       );
     }
-    res.writeHead(200);
-    res.end();
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(usersData[indexOfUser]));
   });
+};
+
+exports.deleteUser = (req: IncomingMessage, res: ServerResponse) => {
+  const uniqueId = req.url?.split("/")[3];
+
+  const user: User = usersData.find((elem) => elem.id === uniqueId);
+  const indexOfUser = usersData.indexOf(user);
+
+  if (!user) {
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "User didn't find" }));
+  }
+
+  usersData.splice(indexOfUser, 1);
+  res.writeHead(204);
+  res.end();
 };
